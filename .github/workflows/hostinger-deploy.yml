@@ -2,7 +2,7 @@ name: Build and publish to deploy branch
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -20,18 +20,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Install dependencies
         run: npm install
 
       - name: Build
-  run: |
-    npm run build
-    ls -la
-    ls -la dist
+        run: |
+          npm run build
+          ls -la
+          ls -la dist
 
       - name: Publish dist to deploy branch
         run: |
+          # keep dist safe before switching branches / cleaning
+          rm -rf /tmp/dist
+          cp -R dist /tmp/dist
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
@@ -41,9 +46,8 @@ jobs:
           git reset --hard
           git clean -fdx
 
-          mv dist/* .
-          rm -rf dist node_modules src .github package.json package-lock.json vite.config.* README* || true
-
+          # publish the built site
+          cp -R /tmp/dist/* .
           touch .nojekyll
 
           git add -A
