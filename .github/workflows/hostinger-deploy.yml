@@ -21,18 +21,18 @@ jobs:
       - name: Install dependencies (no lock file)
         run: npm install --no-package-lock
 
-- name: Build
-  run: |
-    cd app
-    npm run build
+      - name: Build
+        run: |
+          cd app
+          npm run build
 
-     - name: Deploy dist to deploy branch
-  run: |
-    git config user.name "github-actions"
-    git config user.email "actions@github.com"
-    git checkout --orphan deploy
-    git rm -rf .
-    mv app/dist/* .
-    git add .
-    git commit -m "Deploy build"
-    git push -f origin deploy
+      - name: Deploy dist to deploy branch
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git checkout --orphan deploy
+          git rm -rf .
+          mv app/dist/* .
+          git add .
+          git commit -m "Deploy build"
+          git push -f origin deploy
