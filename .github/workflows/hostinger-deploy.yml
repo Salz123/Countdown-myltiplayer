@@ -2,8 +2,11 @@ name: Build and publish to deploy branch
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -17,22 +20,30 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
-      - name: Install dependencies (no lock file)
-        run: npm install --no-package-lock
+      - name: Install dependencies
+        run: npm install
 
       - name: Build
-        run: |
-          cd app
-          npm run build
+        run: npm run build
 
-      - name: Deploy dist to deploy branch
+      - name: Publish dist to deploy branch
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          rm -rf .git/worktrees || true
+
           git checkout --orphan deploy
-          git rm -rf .
-          mv app/dist/* .
-          git add .
-          git commit -m "Deploy build"
+          git reset --hard
+          git clean -fdx
+
+          mv dist/* .
+          rm -rf dist node_modules src .github package.json package-lock.json vite.config.* README* || true
+
+          touch .nojekyll
+
+          git add -A
+          git commit -m "Deploy build" || echo "No changes to commit"
           git push -f origin deploy
